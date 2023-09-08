@@ -29,3 +29,30 @@ def test_albums_are_equal():
     assert album1 == album2
     # Try commenting out the `__eq__` method in lib/album.py
     # And see what happens when you run this test again.
+
+"""
+We can check if an album object is valid 
+and return true if it is or false otherwise
+"""
+def test_album_valid():
+    album1 = Album(1, "", "", "")
+    album2 = Album(2, "test title", "2000", "1")
+    album3 = Album(3, None, None, None)
+    album4 = Album(4, "title", "", "")
+    album5 = Album(5, None, "", "3")
+    assert album1.is_valid() == False
+    assert album2.is_valid() == True
+    assert album3.is_valid() == False
+    assert album4.is_valid() == False
+    assert album5.is_valid() == False
+
+"""
+We get an error message when Album#is_valid is False
+"""
+def test_get_error_message():
+    album1 = Album(1, "", "", "")
+    assert album1.get_error_message() == "Title can't be blank, Release year can't be blank, Artist ID can't be blank"
+    album2 = Album(2, "title", None, "")
+    assert album2.get_error_message() == "Release year can't be blank, Artist ID can't be blank"
+    album3 = Album(3, "title", "release year", None)
+    assert album3.get_error_message() == "Artist ID can't be blank"

@@ -21,6 +21,7 @@ def test_get_emoji(page, test_web_address): # Note new parameters
 """
 When we call GET /albums
 we get a list of album titles and release years in html format
+we get a link to add a new album to the list 
 """
 def test_get_albums(page, test_web_address, db_connection):
     db_connection.seed('seeds/record_store.sql')
@@ -30,6 +31,8 @@ def test_get_albums(page, test_web_address, db_connection):
         "Doolittle",
         "Surfer Rosa"
     ])
+    anchor_tag = page.locator(".a-new")
+    expect(anchor_tag).to_have_text("Add new album")
 
 """
 When we call GET /albums/<id> 
@@ -111,3 +114,41 @@ def test_artist_link_goes_to_page(page, test_web_address, db_connection):
     page.click("text=ABBA")
     paragraph_tag = page.locator("p")
     expect(paragraph_tag).to_have_text("Genre: Pop")
+
+# Test-drive and implement a form page to add a new album.
+
+# You should then be able to use the form in your web browser to add a new album, 
+# and see this new album in the albums list page
+
+#need link on /albums that leads to /new
+#/new has form with title, release_year, artist_id fields and "Add album" submit button
+#POST /new updates albums database with body parameters 
+
+"""
+We can create a new album and see it reflected in albums
+"""
+def test_add_new_album_link(page, test_web_address, db_connection):
+    db_connection.seed("seeds/record_store.sql")
+    page.goto(f"http://{test_web_address}/albums")
+    page.click("text='Add new album'")
+    page.fill("input[name=title]", "Red")
+    page.fill("input[name=release_year]", "2012")
+    page.fill("input[name=artist_id]", "2")
+    page.click("text='Add album'")
+    h1_tag = page.locator("h1")
+    expect(h1_tag).to_have_text("Red")
+
+"""
+When we create a new album with invalid fields we see an error message
+"""
+def test_add_album_error(page, test_web_address, db_connection):
+    db_connection.seed("seeds/record_store.sql")
+    page.goto(f"http://{test_web_address}/albums")
+    page.click("text='Add new album'")
+    page.fill("input[name=title]", "")
+    page.fill("input[name=release_year]", "")
+    page.fill("input[name=artist_id]", "2")
+    page.click("text='Add album'", timeout=3000)
+    div_tag = page.locator("div")
+    page.screenshot(path="screenshot.png")
+    expect(div_tag).to_have_text("Title can't be blank, Release year can't be blank")

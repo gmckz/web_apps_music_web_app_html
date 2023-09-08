@@ -1,8 +1,9 @@
 import os
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 from lib.database_connection import get_flask_database_connection
 from lib.album_repository import AlbumRepository
 from lib.artist_repository import ArtistRepository
+from lib.album import Album
 # Create a new Flask app
 app = Flask(__name__)
 
@@ -51,6 +52,36 @@ def get_single_artist(id):
     artist_repository = ArtistRepository(connection)
     artist = artist_repository.find(id)
     return render_template('artists/artist_info.html', artist=artist)
+
+@app.route('/albums/new')
+def get_new_albums():
+    return render_template('albums/new.html')
+
+@app.route('/albums/new', methods=['POST'])
+def create_new_album():
+    connection = get_flask_database_connection(app)
+    album_repository = AlbumRepository(connection)
+    title = request.form["title"]
+    release_year = request.form["release_year"]
+    artist_id = request.form["artist_id"]
+    album = Album(None, title, release_year, artist_id)
+    if album.is_valid() == True:
+        album_repository.create(album)
+        album_id = _get_album_id_by_title(album.title)
+        return redirect(f"/albums/{album_id}")
+    else:
+        return render_template('albums/new.html', errors=album.get_error_message())
+    
+
+def _get_album_id_by_title(title):
+    connection = get_flask_database_connection(app)
+    album_repository = AlbumRepository(connection)
+    albums = album_repository.all()
+    for album in albums:
+        if album.title == title:
+            return album.id
+
+
 
 # This imports some more example routes for you to see how they work
 # You can delete these lines if you don't need them.
